@@ -1,0 +1,31 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Host/">
+    <Project Path="src/Host/InvoiceFlow.Api/InvoiceFlow.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Approval/">
+    <Project Path="src/Modules/Approval/InvoiceFlow.Approval/InvoiceFlow.Approval.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Extraction/">
+    <Project Path="src/Modules/Extraction/InvoiceFlow.Extraction/InvoiceFlow.Extraction.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Intake/">
+    <Project Path="src/Modules/Intake/InvoiceFlow.Intake/InvoiceFlow.Intake.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Payments/">
+    <Project Path="src/Modules/Payments/InvoiceFlow.Payments/InvoiceFlow.Payments.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Reporting/">
+    <Project Path="src/Modules/Reporting/InvoiceFlow.Reporting/InvoiceFlow.Reporting.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Validation/">
+    <Project Path="src/Modules/Validation/InvoiceFlow.Validation/InvoiceFlow.Validation.csproj" />
+  </Folder>
+  <Folder Name="/src/SharedKernel/">
+    <Project Path="src/SharedKernel/InvoiceFlow.SharedKernel/InvoiceFlow.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/InvoiceFlow.SharedKernel.Tests/InvoiceFlow.SharedKernel.Tests.csproj" />
+  </Folder>
+</Solution>
