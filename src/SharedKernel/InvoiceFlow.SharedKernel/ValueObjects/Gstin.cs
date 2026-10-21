@@ -6,7 +6,7 @@ namespace InvoiceFlow.SharedKernel.ValueObjects;
 
 public sealed partial record Gstin
 {
-    private const string GstinPattern = @"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$";
+    private const string GstinPattern = @"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]\z";
 
     public string Value { get; }
     public int StateCode => int.Parse(Value[..2], CultureInfo.InvariantCulture);
