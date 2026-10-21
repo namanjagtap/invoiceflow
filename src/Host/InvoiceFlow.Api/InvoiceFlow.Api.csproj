@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\Intake\InvoiceFlow.Intake\InvoiceFlow.Intake.csproj" />
+    <ProjectReference Include="..\..\Modules\Extraction\InvoiceFlow.Extraction\InvoiceFlow.Extraction.csproj" />
+    <ProjectReference Include="..\..\Modules\Validation\InvoiceFlow.Validation\InvoiceFlow.Validation.csproj" />
+    <ProjectReference Include="..\..\Modules\Approval\InvoiceFlow.Approval\InvoiceFlow.Approval.csproj" />
+    <ProjectReference Include="..\..\Modules\Payments\InvoiceFlow.Payments\InvoiceFlow.Payments.csproj" />
+    <ProjectReference Include="..\..\Modules\Reporting\InvoiceFlow.Reporting\InvoiceFlow.Reporting.csproj" />
+    <ProjectReference Include="..\..\SharedKernel\InvoiceFlow.SharedKernel\InvoiceFlow.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>
