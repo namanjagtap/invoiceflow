@@ -4,7 +4,4 @@
     <ProjectReference Include="..\..\..\SharedKernel\InvoiceFlow.SharedKernel\InvoiceFlow.SharedKernel.csproj" />
   </ItemGroup>
 
-  <PropertyGroup>
-  </PropertyGroup>
-
 </Project>
