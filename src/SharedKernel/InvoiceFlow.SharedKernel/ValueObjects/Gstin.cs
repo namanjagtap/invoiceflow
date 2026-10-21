@@ -19,7 +19,7 @@ namespace InvoiceFlow.SharedKernel.ValueObjects
         }
 
         [GeneratedRegex(GstinPattern, RegexOptions.CultureInvariant)]
-        public static partial Regex GstinRegex();
+        private static partial Regex GstinRegex();
 
         public static Gstin Parse(string value)
         {
