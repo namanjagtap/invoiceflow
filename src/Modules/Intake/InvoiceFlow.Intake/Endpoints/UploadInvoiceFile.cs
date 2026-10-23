@@ -6,6 +6,7 @@ namespace InvoiceFlow.Intake.Endpoints;
 internal static class UploadInvoiceFile
 {
     private const long MaxFileSizeBytes = 10 * 1024 * 1024;
+    private static ReadOnlySpan<byte> PdfSignature => "%PDF-"u8;
 
     public static async Task<IResult> HandleAsync(IFormFile file, IInvoiceFileStore store, CancellationToken cancellationToken)
     {
@@ -28,6 +29,34 @@ internal static class UploadInvoiceFile
             return Results.BadRequest(new
             {
                 error = "File must be a PDF"
+            });
+        }
+
+        byte[] signature = new byte[5];
+        int bytesRead = 0;
+
+        await using (Stream signatureStream = file.OpenReadStream())
+        {
+            while (bytesRead < signature.Length)
+            {
+                int read = await signatureStream.ReadAsync(
+                    signature.AsMemory(bytesRead),
+                    cancellationToken);
+
+                if (read == 0)
+                {
+                    break;
+                }
+                bytesRead += read;
+            }
+        }
+
+
+        if (bytesRead != signature.Length || !signature.AsSpan().SequenceEqual(PdfSignature))
+        {
+            return Results.BadRequest(new
+            {
+                error = "The uploaded file does not have a valid PDF signature."
             });
         }
 
