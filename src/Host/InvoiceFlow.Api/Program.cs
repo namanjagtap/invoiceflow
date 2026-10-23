@@ -1,7 +1,10 @@
+using InvoiceFlow.Intake;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddOpenApi();
+builder.Services.AddIntakeModule(builder.Configuration);
 
 var app = builder.Build();
 
@@ -12,6 +15,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.MapIntakeEndpoints();
 
 app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
 
