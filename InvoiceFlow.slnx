@@ -30,6 +30,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/InvoiceFlow.Intake.Tests/InvoiceFlow.Intake.Tests.csproj" />
+    <Project Path="tests/InvoiceFlow.LearningTests/InvoiceFlow.LearningTests.csproj" />
     <Project Path="tests/InvoiceFlow.SharedKernel.Tests/InvoiceFlow.SharedKernel.Tests.csproj" />
   </Folder>
 </Solution>
