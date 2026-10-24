@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace InvoiceFlow.Intake;
 
@@ -11,10 +12,18 @@ public static class IntakeModule
 {
     public static IServiceCollection AddIntakeModule(this IServiceCollection services, IConfiguration configuration)
     {
-        string rootPath = configuration["Intake:StoragePath"] ?? "App_Data/invoices";
+        services.AddOptions<IntakeOptions>()
+            .Bind(configuration.GetSection(IntakeOptions.SectionName))
+            .ValidateDataAnnotations()
+            .PostConfigure<IHostEnvironment>((options, env) =>
+            {
+                if (!string.IsNullOrWhiteSpace(options.StoragePath))
+                {
+                    options.StoragePath = Path.GetFullPath(options.StoragePath, env.ContentRootPath);
+                }
+            }).ValidateOnStart();
 
-        services.AddSingleton<IInvoiceFileStore>(
-            new LocalInvoiceFileStore(Path.GetFullPath(rootPath)));
+        services.AddSingleton<IInvoiceFileStore, LocalInvoiceFileStore>();
 
         return services;
     }

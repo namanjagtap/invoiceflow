@@ -1,4 +1,5 @@
 ﻿using InvoiceFlow.Intake.Files;
+using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 
 namespace InvoiceFlow.Intake.Tests.Files;
@@ -8,7 +9,8 @@ public sealed class LocalInvoiceFileStoreTests : IDisposable
     private readonly string _root = Path.Combine(Path.GetTempPath(), "invoiceflow-tests", Guid.NewGuid().ToString());
     private readonly LocalInvoiceFileStore _store;
 
-    public LocalInvoiceFileStoreTests() => _store = new LocalInvoiceFileStore(_root);
+    public LocalInvoiceFileStoreTests() =>
+        _store = new LocalInvoiceFileStore(Options.Create(new IntakeOptions { StoragePath = _root }));
 
     public void Dispose()
     {
