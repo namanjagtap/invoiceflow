@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using Microsoft.Extensions.Options;
+using System.Globalization;
 using System.Security.Cryptography;
 
 namespace InvoiceFlow.Intake.Files;
@@ -16,8 +17,10 @@ internal interface IInvoiceFileStore
         string fileName,
         CancellationToken cancellationToken);
 }
-internal sealed class LocalInvoiceFileStore(string rootPath) : IInvoiceFileStore
+internal sealed class LocalInvoiceFileStore(IOptions<IntakeOptions> options) : IInvoiceFileStore
 {
+    private readonly string _rootPath = options.Value.StoragePath;
+
     public async Task<StoredFile> SaveAsync(
         Stream content,
         string fileName,
@@ -30,7 +33,7 @@ internal sealed class LocalInvoiceFileStore(string rootPath) : IInvoiceFileStore
         DateTime utcNow = DateTime.UtcNow;
 
         string folder = Path.Combine(
-            rootPath,
+            _rootPath,
             utcNow.ToString("yyyy", CultureInfo.InvariantCulture),
             utcNow.ToString("MM", CultureInfo.InvariantCulture));
 

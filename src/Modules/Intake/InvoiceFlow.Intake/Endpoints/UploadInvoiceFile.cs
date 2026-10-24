@@ -1,15 +1,21 @@
 ﻿using InvoiceFlow.Intake.Files;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
 namespace InvoiceFlow.Intake.Endpoints;
 
 internal static class UploadInvoiceFile
 {
-    private const long MaxFileSizeBytes = 10 * 1024 * 1024;
     private static ReadOnlySpan<byte> PdfSignature => "%PDF-"u8;
 
-    public static async Task<IResult> HandleAsync(IFormFile file, IInvoiceFileStore store, CancellationToken cancellationToken)
+    public static async Task<IResult> HandleAsync(
+        IFormFile file,
+        IInvoiceFileStore store,
+        IOptions<IntakeOptions> options,
+        CancellationToken cancellationToken)
     {
+        long maxBytes = options.Value.MaxUploadSizeBytes;
+
         if (file is null || file.Length == 0)
         {
             return Results.BadRequest(new
@@ -17,11 +23,11 @@ internal static class UploadInvoiceFile
                 error = "File is empty"
             });
         }
-        if (file.Length > MaxFileSizeBytes)
+        if (file.Length > maxBytes)
         {
             return Results.BadRequest(new
             {
-                error = "File is larger than 10 MB"
+                error = $"File is larger than {maxBytes / (1024 * 1024)} MB"
             });
         }
         if (!string.Equals(file.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase))
