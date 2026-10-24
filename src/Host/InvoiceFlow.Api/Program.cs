@@ -1,3 +1,4 @@
+using InvoiceFlow.Approval;
 using InvoiceFlow.Intake;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddOpenApi();
 builder.Services.AddIntakeModule(builder.Configuration);
+builder.Services.AddApprovalModule(builder.Configuration);
 
 var app = builder.Build();
 
