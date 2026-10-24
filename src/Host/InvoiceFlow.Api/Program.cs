@@ -1,12 +1,20 @@
 using InvoiceFlow.Approval;
+using InvoiceFlow.Extraction;
 using InvoiceFlow.Intake;
+using InvoiceFlow.Payments;
+using InvoiceFlow.Reporting;
+using InvoiceFlow.Validation;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddOpenApi();
 builder.Services.AddIntakeModule(builder.Configuration);
+builder.Services.AddExtractionModule(builder.Configuration);
+builder.Services.AddValidationModule(builder.Configuration);
 builder.Services.AddApprovalModule(builder.Configuration);
+builder.Services.AddPaymentsModule(builder.Configuration);
+builder.Services.AddReportingModule(builder.Configuration);
 
 var app = builder.Build();
 
