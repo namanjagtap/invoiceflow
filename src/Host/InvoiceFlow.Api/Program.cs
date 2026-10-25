@@ -1,3 +1,4 @@
+using InvoiceFlow.Api.Middleware;
 using InvoiceFlow.Approval;
 using InvoiceFlow.Extraction;
 using InvoiceFlow.Intake;
@@ -19,6 +20,9 @@ builder.Services.AddReportingModule(builder.Configuration);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+app.UseCorrelationId();         // first: every later log line carries the ID
+app.UseRequestTiming();         // second: logs the completion time of every request
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
