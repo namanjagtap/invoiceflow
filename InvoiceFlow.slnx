@@ -32,6 +32,7 @@
     <Project Path="src/SharedKernel/InvoiceFlow.SharedKernel/InvoiceFlow.SharedKernel.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/InvoiceFlow.Api.Tests/InvoiceFlow.Api.Tests.csproj" />
     <Project Path="tests/InvoiceFlow.Approval.Tests/InvoiceFlow.Approval.Tests.csproj" />
     <Project Path="tests/InvoiceFlow.Intake.Tests/InvoiceFlow.Intake.Tests.csproj" />
     <Project Path="tests/InvoiceFlow.LearningTests/InvoiceFlow.LearningTests.csproj" />
