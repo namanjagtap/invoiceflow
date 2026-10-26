@@ -8,7 +8,7 @@ using InvoiceFlow.Validation;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add services to the container. 
 builder.Services.AddOpenApi();
 builder.Services.AddIntakeModule(builder.Configuration);
 builder.Services.AddExtractionModule(builder.Configuration);
