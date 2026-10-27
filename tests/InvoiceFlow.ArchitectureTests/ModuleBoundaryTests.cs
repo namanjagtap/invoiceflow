@@ -1,5 +1,4 @@
-﻿
-using InvoiceFlow.SharedKernel.ValueObjects;
+﻿using InvoiceFlow.SharedKernel.ValueObjects;
 using NetArchTest.Rules;
 using System.Reflection;
 
