@@ -1,5 +1,6 @@
 ﻿using InvoiceFlow.Intake.Endpoints;
 using InvoiceFlow.Intake.Files;
+using InvoiceFlow.Intake.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
@@ -24,6 +25,8 @@ public static class IntakeModule
             }).ValidateOnStart();
 
         services.AddSingleton<IInvoiceFileStore, LocalInvoiceFileStore>();
+        services.AddSingleton<IVendorRepository, InMemoryVendorRepository>();
+        services.AddSingleton<IInvoiceRepository, InMemoryInvoiceRepository>();
 
         return services;
     }
