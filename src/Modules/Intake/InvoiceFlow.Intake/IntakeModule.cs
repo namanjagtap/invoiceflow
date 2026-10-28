@@ -38,6 +38,7 @@ public static class IntakeModule
         RouteGroupBuilder group = endpoints.MapGroup("/api/intake");
 
         group.MapPost("/files", UploadInvoiceFile.HandleAsync).DisableAntiforgery();
+        group.MapGroup("/vendors").MapVendorEndpoints();
 
         return endpoints;
     }
