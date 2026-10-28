@@ -1,4 +1,5 @@
-﻿using InvoiceFlow.Intake.Endpoints;
+﻿using FluentValidation;
+using InvoiceFlow.Intake.Endpoints;
 using InvoiceFlow.Intake.Files;
 using InvoiceFlow.Intake.Infrastructure;
 using Microsoft.AspNetCore.Builder;
@@ -27,6 +28,7 @@ public static class IntakeModule
         services.AddSingleton<IInvoiceFileStore, LocalInvoiceFileStore>();
         services.AddSingleton<IVendorRepository, InMemoryVendorRepository>();
         services.AddSingleton<IInvoiceRepository, InMemoryInvoiceRepository>();
+        services.AddValidatorsFromAssembly(typeof(IntakeModule).Assembly, includeInternalTypes: true);
 
         return services;
     }
