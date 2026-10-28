@@ -44,10 +44,7 @@ public sealed class LocalInvoiceFileStoreTests : IDisposable
         using var content = new MemoryStream(bytes);
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            () => _store.SaveAsync(
-                content,
-                "invoice.pdf",
-                cts.Token));
+            () => _store.SaveAsync(content, "invoice.pdf", cts.Token));
 
         string[] files = Directory.Exists(_root)
             ? Directory.GetFiles(_root, "*.pdf", SearchOption.AllDirectories)
@@ -76,5 +73,32 @@ public sealed class LocalInvoiceFileStoreTests : IDisposable
 
         Assert.NotEqual(first.FileId, second.FileId);
         Assert.Equal(first.Sha256, second.Sha256);   // same content gives the same hash, the basis of duplicate detection
+    }
+
+    [Fact]
+    public async Task ExistsAsync_WhenFileWasSaved_ReturnsTrue()
+    {
+        using var content = new MemoryStream("%PDF-1.4 test invoice"u8.ToArray());
+
+        StoredFile stored = await _store.SaveAsync(
+           content,
+           "invoice.pdf",
+           CancellationToken.None);
+
+        bool exists = await _store.ExistsAsync(
+            stored.FileId,
+            CancellationToken.None);
+
+        Assert.True(exists);
+    }
+
+    [Fact]
+    public async Task ExistsAsync_WhenFileDoesNotExist_ReturnsFalse()
+    {
+        bool exists = await _store.ExistsAsync(
+            Guid.NewGuid(),
+            CancellationToken.None);
+
+        Assert.False(exists);
     }
 }
