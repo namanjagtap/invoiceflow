@@ -17,6 +17,8 @@ builder.Services.AddApprovalModule(builder.Configuration);
 builder.Services.AddPaymentsModule(builder.Configuration);
 builder.Services.AddReportingModule(builder.Configuration);
 
+builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
