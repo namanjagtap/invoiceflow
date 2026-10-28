@@ -16,6 +16,10 @@ internal interface IInvoiceFileStore
         Stream content,
         string fileName,
         CancellationToken cancellationToken);
+
+    Task<bool> ExistsAsync(
+        Guid fileId,
+        CancellationToken cancellationToken);
 }
 internal sealed class LocalInvoiceFileStore(IOptions<IntakeOptions> options) : IInvoiceFileStore
 {
@@ -84,5 +88,28 @@ internal sealed class LocalInvoiceFileStore(IOptions<IntakeOptions> options) : I
             File.Delete(path);
             throw;
         }
+    }
+
+    public Task<bool> ExistsAsync(
+        Guid fileId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!Directory.Exists(_rootPath))
+        {
+            return Task.FromResult(false);
+        }
+
+        string fileName = $"{fileId}.pdf";
+
+        bool exists = Directory
+            .EnumerateFiles(
+                _rootPath,
+                fileName,
+                SearchOption.AllDirectories)
+            .Any();
+
+        return Task.FromResult(exists);
     }
 }

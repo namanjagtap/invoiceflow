@@ -3,6 +3,7 @@ using InvoiceFlow.Intake.Infrastructure;
 using InvoiceFlow.SharedKernel.ValueObjects;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace InvoiceFlow.Intake.Endpoints;
@@ -13,12 +14,18 @@ internal static class VendorEndpoints
         this RouteGroupBuilder group)
     {
         group.MapPost("/", RegisterVendor)
-            .AddEndpointFilter<ValidationFilter<RegisterVendorRequest>>();
+            .AddEndpointFilter<ValidationFilter<RegisterVendorRequest>>()
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        group.MapGet("/{id:guid}", GetVendorById)
+            .WithName("GetVendorById")
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         return group;
     }
 
-    private static IResult RegisterVendor(
+    private static Results<CreatedAtRoute<VendorResponse>, ProblemHttpResult> RegisterVendor(
         RegisterVendorRequest request,
         IVendorRepository vendorRepository,
         TimeProvider timeProvider)
@@ -39,15 +46,37 @@ internal static class VendorEndpoints
                 detail: "A vendor with this GSTIN is already registered.");
         }
 
-        var response = new VendorResponse(
+        VendorResponse response = ToResponse(vendor);
+
+        return TypedResults.CreatedAtRoute(
+            response,
+            "GetVendorById",
+            new { id = vendor.Id });
+    }
+
+    private static Results<Ok<VendorResponse>, ProblemHttpResult> GetVendorById(
+        Guid id,
+        IVendorRepository vendorRepository)
+    {
+        Vendor? vendor = vendorRepository.GetById(id);
+
+        if (vendor is null)
+        {
+            return TypedResults.Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Vendor not found");
+        }
+
+        return TypedResults.Ok(ToResponse(vendor));
+    }
+
+    private static VendorResponse ToResponse(Vendor vendor)
+    {
+        return new VendorResponse(
             vendor.Id,
             vendor.Name,
             vendor.Gstin.Value,
             vendor.Gstin.StateCode,
             vendor.PaymentTermsDays);
-
-        return TypedResults.Created(
-            $"/api/intake/vendors/{vendor.Id}",
-            response);
     }
 }

@@ -3,6 +3,7 @@ using InvoiceFlow.Intake.Endpoints;
 using InvoiceFlow.Intake.Files;
 using InvoiceFlow.Intake.Infrastructure;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,7 +39,12 @@ public static class IntakeModule
         RouteGroupBuilder group = endpoints.MapGroup("/api/intake");
 
         group.MapPost("/files", UploadInvoiceFile.HandleAsync).DisableAntiforgery();
-        group.MapGroup("/vendors").MapVendorEndpoints();
+        group.MapGroup("/vendors")
+            .WithTags("Vendors")
+            .MapVendorEndpoints();
+        group.MapGroup("/invoices")
+            .WithTags("Invoices")
+            .MapInvoiceEndpoints();
 
         return endpoints;
     }
