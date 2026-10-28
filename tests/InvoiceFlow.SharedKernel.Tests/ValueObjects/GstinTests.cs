@@ -5,10 +5,10 @@ namespace InvoiceFlow.SharedKernel.Tests.ValueObjects;
 public class GstinTests
 {
     [Theory]
-    [InlineData("27AAPFU0939F1ZV", 27)]
-    [InlineData(" 29aagcb7383j1z4 ", 29)]
-    [InlineData("23ABCDE1234F1Z8", 23)]
-    public void Parse_ValidGstin_ReturnNormalizedValue(string input, int expectedStateCode)
+    [InlineData("27AAPFU0939F1ZV", "27")]
+    [InlineData(" 29aagcb7383j1z4 ", "29")]
+    [InlineData("23ABCDE1234F1Z8", "23")]
+    public void Parse_ValidGstin_ReturnNormalizedValue(string input, string expectedStateCode)
     {
         Gstin gstin = Gstin.Parse(input);
 
@@ -44,8 +44,8 @@ public class GstinTests
         Gstin second = Gstin.Parse("23AAPFU0939F1Z3");
 
         Assert.NotEqual(first.Value, second.Value);
-        Assert.Equal(23, first.StateCode);
-        Assert.Equal(23, second.StateCode);
+        Assert.Equal("23", first.StateCode);
+        Assert.Equal("23", second.StateCode);
         Assert.True(first.IsSameState(second));
     }
 
@@ -64,5 +64,13 @@ public class GstinTests
         Gstin gstin = Gstin.Parse(expected);
 
         Assert.Equal(expected, gstin.ToString());
+    }
+
+    [Fact]
+    public void StateCode_WhenStateCodeHasLeadingZero_PreservesLeadingZero()
+    {
+        Gstin gstin = Gstin.Parse("27AAPFU0939F1ZV");
+
+        Assert.Equal("27", gstin.StateCode);
     }
 }
