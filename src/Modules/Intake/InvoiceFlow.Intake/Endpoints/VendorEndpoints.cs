@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 
 namespace InvoiceFlow.Intake.Endpoints;
 
@@ -28,8 +29,11 @@ internal static class VendorEndpoints
     private static Results<CreatedAtRoute<VendorResponse>, ProblemHttpResult> RegisterVendor(
         RegisterVendorRequest request,
         IVendorRepository vendorRepository,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        ILoggerFactory loggerFactory)
     {
+        ILogger logger = loggerFactory.CreateLogger("InvoiceFlow.Intake.Vendors");
+
         Gstin gstin = Gstin.Parse(request.Gstin!);
 
         Vendor vendor = Vendor.Register(
@@ -40,11 +44,20 @@ internal static class VendorEndpoints
 
         if (!vendorRepository.TryAdd(vendor))
         {
+            logger.LogWarning(
+                "Duplicate vendor registration rejected for GSTIN {Gstin}",
+                vendor.Gstin.Value);
+
             return TypedResults.Problem(
                 statusCode: StatusCodes.Status409Conflict,
                 title: "Duplicate vendor",
                 detail: "A vendor with this GSTIN is already registered.");
         }
+
+        logger.LogInformation(
+            "Vendor {VendorId} registered with GSTIN {Gstin}",
+            vendor.Id,
+            vendor.Gstin.Value);
 
         VendorResponse response = ToResponse(vendor);
 

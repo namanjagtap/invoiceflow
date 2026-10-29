@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 
 namespace InvoiceFlow.Intake.Endpoints;
 
@@ -35,8 +36,11 @@ internal static class InvoiceEndpoints
         IInvoiceRepository invoiceRepository,
         IInvoiceFileStore fileStore,
         TimeProvider timeProvider,
+        ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
+        ILogger logger = loggerFactory.CreateLogger("InvoiceFlow.Intake.Invoices");
+
         Vendor? vendor = vendorRepository.GetById(request.VendorId);
 
         if (vendor is null)
@@ -74,11 +78,23 @@ internal static class InvoiceEndpoints
 
         if (!invoiceRepository.TryAdd(invoice))
         {
+            logger.LogWarning(
+                "Duplicate invoice {InvoiceNumber} rejected for vendor {VendorId}",
+                invoice.Number.Value,
+                invoice.VendorId);
+
             return TypedResults.Problem(
                 statusCode: StatusCodes.Status409Conflict,
                 title: "Duplicate invoice",
                 detail: "This vendor has already submitted this invoice number in this financial year.");
         }
+
+        logger.LogInformation(
+            "Invoice {InvoiceId} ({InvoiceNumber}) submitted by vendor {VendorId} for {TotalAmount}",
+            invoice.Id,
+            invoice.Number.Value,
+            invoice.VendorId,
+            invoice.TotalAmount.Amount);
 
         InvoiceResponse response = ToResponse(invoice);
 
