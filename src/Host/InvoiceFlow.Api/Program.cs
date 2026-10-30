@@ -1,11 +1,13 @@
 using InvoiceFlow.Api.ErrorHandling;
 using InvoiceFlow.Api.Middleware;
+using InvoiceFlow.Api.OpenApi;
 using InvoiceFlow.Approval;
 using InvoiceFlow.Extraction;
 using InvoiceFlow.Intake;
 using InvoiceFlow.Payments;
 using InvoiceFlow.Reporting;
 using InvoiceFlow.Validation;
+using Microsoft.AspNetCore.Authorization;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -23,7 +25,8 @@ try
             .Enrich.FromLogContext());
 
     // Add services to the container. 
-    builder.Services.AddOpenApi();
+    builder.Services.AddOpenApi(options => options
+        .AddDocumentTransformer<BearerSecuritySchemeTransformer>());
     builder.Services.AddIntakeModule(builder.Configuration);
     builder.Services.AddExtractionModule(builder.Configuration);
     builder.Services.AddValidationModule(builder.Configuration);
@@ -33,6 +36,12 @@ try
 
     builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
     builder.Services.AddApiErrorHandling();
+    builder.Services.AddAuthentication().AddJwtBearer();
+    builder.Services.AddAuthorizationBuilder()
+        .SetFallbackPolicy(
+            new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build());
 
     var app = builder.Build();
 
@@ -44,16 +53,19 @@ try
 
     if (app.Environment.IsDevelopment())
     {
-        app.MapOpenApi();
+        app.MapOpenApi().AllowAnonymous();
         app.UseSwaggerUI(options =>
             options.SwaggerEndpoint("/openapi/v1.json", "InvoiceFlow API"));
     }
 
     app.UseHttpsRedirection();
 
+    app.UseAuthentication();
+    app.UseAuthorization();
+
     app.MapIntakeEndpoints();
 
-    app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
+    app.MapGet("/health", () => Results.Ok(new { status = "Healthy" })).AllowAnonymous();
 
     app.Run();
 }
