@@ -1,4 +1,5 @@
-﻿using InvoiceFlow.Intake.Domain;
+﻿using InvoiceFlow.Intake.Authorization;
+using InvoiceFlow.Intake.Domain;
 using InvoiceFlow.Intake.Infrastructure;
 using InvoiceFlow.SharedKernel.ValueObjects;
 using Microsoft.AspNetCore.Builder;
@@ -17,11 +18,13 @@ internal static class VendorEndpoints
         group.MapPost("/", RegisterVendor)
             .AddEndpointFilter<ValidationFilter<RegisterVendorRequest>>()
             .ProducesValidationProblem()
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .RequireAuthorization(IntakePolicies.ManageVendors);
 
         group.MapGet("/{id:guid}", GetVendorById)
             .WithName("GetVendorById")
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireAuthorization(IntakePolicies.ReadVendors);
 
         return group;
     }
