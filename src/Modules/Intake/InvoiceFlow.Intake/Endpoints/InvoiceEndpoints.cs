@@ -1,4 +1,5 @@
-﻿using InvoiceFlow.Intake.Domain;
+﻿using InvoiceFlow.Intake.Authorization;
+using InvoiceFlow.Intake.Domain;
 using InvoiceFlow.Intake.Files;
 using InvoiceFlow.Intake.Infrastructure;
 using InvoiceFlow.SharedKernel.ValueObjects;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 
 namespace InvoiceFlow.Intake.Endpoints;
 
@@ -19,27 +21,36 @@ internal static class InvoiceEndpoints
             .AddEndpointFilter<ValidationFilter<SubmitInvoiceRequest>>()
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .RequireAuthorization(IntakePolicies.SubmitInvoices);
 
         group.MapGet("/{id:guid}", GetInvoiceById)
             .WithName("GetInvoiceById")
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireAuthorization(IntakePolicies.ReadInvoices);
 
-        group.MapGet("/", ListInvoices);
+        group.MapGet("/", ListInvoices)
+            .RequireAuthorization(IntakePolicies.ReadInvoices);
 
         return group;
     }
 
-    private static async Task<Results<CreatedAtRoute<InvoiceResponse>, ProblemHttpResult>> SubmitInvoice(
+    private static async Task<Results<CreatedAtRoute<InvoiceResponse>, ProblemHttpResult, ForbidHttpResult>> SubmitInvoice(
         SubmitInvoiceRequest request,
         IVendorRepository vendorRepository,
         IInvoiceRepository invoiceRepository,
         IInvoiceFileStore fileStore,
         TimeProvider timeProvider,
         ILoggerFactory loggerFactory,
+        ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
         ILogger logger = loggerFactory.CreateLogger("InvoiceFlow.Intake.Invoices");
+
+        if (!VendorAccess.CanActFor(user, request.VendorId))
+        {
+            return TypedResults.Forbid();
+        }
 
         Vendor? vendor = vendorRepository.GetById(request.VendorId);
 

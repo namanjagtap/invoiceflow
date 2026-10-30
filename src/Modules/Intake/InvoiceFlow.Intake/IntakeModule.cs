@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using InvoiceFlow.Intake.Authorization;
 using InvoiceFlow.Intake.Endpoints;
 using InvoiceFlow.Intake.Files;
 using InvoiceFlow.Intake.Infrastructure;
@@ -30,6 +31,7 @@ public static class IntakeModule
         services.AddSingleton<IVendorRepository, InMemoryVendorRepository>();
         services.AddSingleton<IInvoiceRepository, InMemoryInvoiceRepository>();
         services.AddValidatorsFromAssembly(typeof(IntakeModule).Assembly, includeInternalTypes: true);
+        services.AddIntakePolicies();
 
         return services;
     }
@@ -38,7 +40,9 @@ public static class IntakeModule
     {
         RouteGroupBuilder group = endpoints.MapGroup("/api/intake");
 
-        group.MapPost("/files", UploadInvoiceFile.HandleAsync).DisableAntiforgery();
+        group.MapPost("/files", UploadInvoiceFile.HandleAsync)
+            .DisableAntiforgery()
+            .RequireAuthorization(IntakePolicies.SubmitInvoices);
         group.MapGroup("/vendors")
             .WithTags("Vendors")
             .MapVendorEndpoints();
