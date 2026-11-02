@@ -13,27 +13,29 @@ internal static class IntakePolicies
     internal static IServiceCollection AddIntakePolicies(
         this IServiceCollection services)
     {
-        services.AddAuthorizationBuilder()
-            .AddPolicy(
+        services.AddAuthorizationCore(options =>
+        {
+            options.AddPolicy(
                 ManageVendors,
-                policy => policy.RequireRole(AppRoles.Admin))
-            .AddPolicy(
+                policy => policy.RequireRole(AppRoles.Admin));
+            options.AddPolicy(
                 ReadVendors,
                 policy => policy.RequireRole(
                     AppRoles.ApClerk,
                     AppRoles.Approver,
-                    AppRoles.Admin))
-            .AddPolicy(
+                    AppRoles.Admin));
+            options.AddPolicy(
                 SubmitInvoices,
                 policy => policy.RequireRole(
                     AppRoles.Vendor,
-                    AppRoles.ApClerk))
-            .AddPolicy(
+                    AppRoles.ApClerk));
+            options.AddPolicy(
                 ReadInvoices,
                 policy => policy.RequireRole(
                     AppRoles.ApClerk,
                     AppRoles.Approver,
                     AppRoles.Admin));
+        });
 
         return services;
     }
