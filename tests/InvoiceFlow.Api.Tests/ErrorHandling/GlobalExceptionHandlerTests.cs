@@ -53,7 +53,7 @@ public sealed class GlobalExceptionHandlerTests
         bool handled = await handler.TryHandleAsync(
             context,
             new BadHttpRequestException(
-                "Invalid request body",
+                "Invalid request",
                 StatusCodes.Status400BadRequest),
             CancellationToken.None);
 
@@ -65,7 +65,7 @@ public sealed class GlobalExceptionHandlerTests
         using JsonDocument document = JsonDocument.Parse(body);
 
         Assert.Equal(
-            "Invalid request body",
+            "Invalid request",
             document.RootElement.GetProperty("title").GetString());
     }
 
