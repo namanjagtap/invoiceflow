@@ -64,6 +64,7 @@ try
     app.UseAuthorization();
 
     app.MapIntakeEndpoints();
+    app.MapApprovalEndpoints();
 
     app.MapGet("/health", () => Results.Ok(new { status = "Healthy" })).AllowAnonymous();
 

@@ -30,6 +30,7 @@ public class ApprovalPolicyTests
             .Build();
 
         ServiceCollection services = new();
+        services.AddLogging();
         services.AddApprovalModule(configuration);
 
         return services.BuildServiceProvider(
