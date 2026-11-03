@@ -19,11 +19,11 @@ public sealed class GlobalExceptionHandler(
         if (exception is BadHttpRequestException badHttpRequestException)
         {
             statusCode = badHttpRequestException.StatusCode;
-            title = "Invalid request body";
+            title = "Invalid request";
 
             logger.LogWarning(
                 exception,
-                "Invalid request body for {Method} {Path}",
+                "Invalid request for {Method} {Path}",
                 httpContext.Request.Method,
                 httpContext.Request.Path);
         }
