@@ -30,6 +30,8 @@ internal static class InvoiceEndpoints
             .RequireAuthorization(IntakePolicies.ReadInvoices);
 
         group.MapGet("/", ListInvoices)
+            .AddEndpointFilter<ValidationFilter<ListInvoicesRequest>>()
+            .ProducesValidationProblem()
             .RequireAuthorization(IntakePolicies.ReadInvoices);
 
         return group;
@@ -117,11 +119,12 @@ internal static class InvoiceEndpoints
 
     private static Results<Ok<InvoiceResponse>, ProblemHttpResult> GetInvoiceById(
         Guid id,
-        IInvoiceRepository invoiceRepository)
+        IInvoiceRepository invoiceRepository,
+        ClaimsPrincipal user)
     {
         Invoice? invoice = invoiceRepository.GetById(id);
 
-        if (invoice is null)
+        if (invoice is null || !VendorAccess.CanActFor(user, invoice.VendorId))
         {
             return TypedResults.Problem(
                 statusCode: StatusCodes.Status404NotFound,
@@ -131,15 +134,37 @@ internal static class InvoiceEndpoints
         return TypedResults.Ok(ToResponse(invoice));
     }
 
-    private static Ok<List<InvoiceResponse>> ListInvoices(
-        IInvoiceRepository invoiceRepository)
+    private static Results<Ok<PagedResponse<InvoiceResponse>>, ForbidHttpResult> ListInvoices(
+        [AsParameters] ListInvoicesRequest request,
+        IInvoiceRepository invoiceRepository,
+        ClaimsPrincipal user)
     {
-        List<InvoiceResponse> invoices = invoiceRepository
-            .List()
-            .Select(ToResponse)
-            .ToList();
+        if (!VendorAccess.TryResolveVendorScope(
+            user,
+            request.VendorId,
+            out Guid? vendorId))
+        {
+            return TypedResults.Forbid();
+        }
 
-        return TypedResults.Ok(invoices);
+        int page = request.Page ?? 1;
+        int pageSize = request.PageSize ?? ListInvoicesRequest.DefaultPageSize;
+
+        InvoicePage invoicePage = invoiceRepository.Search(
+            new InvoiceQuery(
+                vendorId,
+                request.FromDate,
+                request.ToDate,
+                page,
+                pageSize));
+
+        PagedResponse<InvoiceResponse> response = new(
+            invoicePage.Items.Select(ToResponse).ToArray(),
+            page,
+            pageSize,
+            invoicePage.TotalCount);
+
+        return TypedResults.Ok(response);
     }
 
     private static InvoiceResponse ToResponse(Invoice invoice)

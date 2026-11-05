@@ -32,6 +32,7 @@ internal static class IntakePolicies
             options.AddPolicy(
                 ReadInvoices,
                 policy => policy.RequireRole(
+                    AppRoles.Vendor,
                     AppRoles.ApClerk,
                     AppRoles.Approver,
                     AppRoles.Admin));

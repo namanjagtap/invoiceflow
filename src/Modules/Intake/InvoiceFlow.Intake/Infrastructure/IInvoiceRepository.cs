@@ -6,5 +6,5 @@ internal interface IInvoiceRepository
 {
     bool TryAdd(Invoice invoice);
     Invoice? GetById(Guid id);
-    IReadOnlyList<Invoice> List();
+    InvoicePage Search(InvoiceQuery query);
 }
