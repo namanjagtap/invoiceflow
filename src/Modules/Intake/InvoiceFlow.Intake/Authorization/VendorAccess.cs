@@ -17,4 +17,33 @@ internal static class VendorAccess
         return Guid.TryParse(vendorIdClaim, out Guid claimedVendorId)
             && claimedVendorId == vendorId;
     }
+
+    public static bool TryResolveVendorScope(
+        ClaimsPrincipal user,
+        Guid? requestedVendorId,
+        out Guid? vendorId)
+    {
+        vendorId = null;
+
+        if (!user.IsInRole(AppRoles.Vendor))
+        {
+            vendorId = requestedVendorId;
+            return true;
+        }
+
+        string? vendorIdClaim = user.FindFirst(AppClaims.VendorId)?.Value;
+
+        if (!Guid.TryParse(vendorIdClaim, out Guid claimedVendorId))
+        {
+            return false;
+        }
+
+        if (requestedVendorId.HasValue && requestedVendorId.Value != claimedVendorId)
+        {
+            return false;
+        }
+
+        vendorId = claimedVendorId;
+        return true;
+    }
 }
