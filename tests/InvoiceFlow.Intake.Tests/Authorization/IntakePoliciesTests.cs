@@ -29,7 +29,7 @@ public sealed class IntakePoliciesTests
         { IntakePolicies.SubmitInvoices, AppRoles.Admin, false },
 
         // ReadInvoices
-        { IntakePolicies.ReadInvoices, AppRoles.Vendor, false },
+        { IntakePolicies.ReadInvoices, AppRoles.Vendor, true },
         { IntakePolicies.ReadInvoices, AppRoles.ApClerk, true },
         { IntakePolicies.ReadInvoices, AppRoles.Approver, true },
         { IntakePolicies.ReadInvoices, AppRoles.Admin, true }

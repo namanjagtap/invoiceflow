@@ -42,12 +42,42 @@ internal sealed class InMemoryInvoiceRepository : IInvoiceRepository
         return _invoicesById.GetValueOrDefault(id);
     }
 
-    public IReadOnlyList<Invoice> List()
+    public InvoicePage Search(InvoiceQuery query)
     {
-        return _invoicesById.Values
+        ArgumentNullException.ThrowIfNull(query);
+
+        IEnumerable<Invoice> invoices = _invoicesById.Values;
+
+        if (query.VendorId.HasValue)
+        {
+            invoices = invoices.Where(
+                invoice => invoice.VendorId == query.VendorId.Value);
+        }
+
+        if (query.FromDate.HasValue)
+        {
+            invoices = invoices.Where(
+                invoice => invoice.InvoiceDate >= query.FromDate.Value);
+        }
+
+        if (query.ToDate.HasValue)
+        {
+            invoices = invoices.Where(
+                invoice => invoice.InvoiceDate <= query.ToDate.Value);
+        }
+
+        IOrderedEnumerable<Invoice> orderedInvoices = invoices
             .OrderByDescending(invoice => invoice.ReceivedAtUtc)
-            .ThenByDescending(invoice => invoice.Id)
+            .ThenByDescending(invoice => invoice.Id);
+
+        int totalCount = orderedInvoices.Count();
+
+        Invoice[] items = orderedInvoices
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
             .ToArray();
+
+        return new InvoicePage(items, totalCount);
     }
 
     private readonly record struct InvoiceKey(
