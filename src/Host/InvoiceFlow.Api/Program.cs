@@ -1,6 +1,7 @@
 using InvoiceFlow.Api.ErrorHandling;
 using InvoiceFlow.Api.Middleware;
 using InvoiceFlow.Api.OpenApi;
+using InvoiceFlow.Api.RateLimiting;
 using InvoiceFlow.Approval;
 using InvoiceFlow.Extraction;
 using InvoiceFlow.Intake;
@@ -36,6 +37,7 @@ try
 
     builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
     builder.Services.AddApiErrorHandling();
+    builder.Services.AddApiRateLimiting(builder.Configuration);
     builder.Services.AddAuthentication().AddJwtBearer();
     builder.Services.AddAuthorizationBuilder()
         .SetFallbackPolicy(
@@ -62,6 +64,7 @@ try
 
     app.UseAuthentication();
     app.UseAuthorization();
+    app.UseRateLimiter();
 
     app.MapIntakeEndpoints();
     app.MapApprovalEndpoints();
