@@ -2,7 +2,9 @@
 using InvoiceFlow.Intake.Authorization;
 using InvoiceFlow.Intake.Endpoints;
 using InvoiceFlow.Intake.Files;
+using InvoiceFlow.Intake.Idempotency;
 using InvoiceFlow.Intake.Infrastructure;
+using InvoiceFlow.SharedKernel.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -30,6 +32,7 @@ public static class IntakeModule
         services.AddSingleton<IInvoiceFileStore, LocalInvoiceFileStore>();
         services.AddSingleton<IVendorRepository, InMemoryVendorRepository>();
         services.AddSingleton<IInvoiceRepository, InMemoryInvoiceRepository>();
+        services.AddSingleton<IIdempotencyStore, InMemoryIdempotencyStore>();
         services.AddValidatorsFromAssembly(typeof(IntakeModule).Assembly, includeInternalTypes: true);
         services.AddIntakePolicies();
 
@@ -42,7 +45,8 @@ public static class IntakeModule
 
         group.MapPost("/files", UploadInvoiceFile.HandleAsync)
             .DisableAntiforgery()
-            .RequireAuthorization(IntakePolicies.SubmitInvoices);
+            .RequireAuthorization(IntakePolicies.SubmitInvoices)
+            .RequireRateLimiting(RateLimitPolicies.Submissions);
         group.MapGroup("/vendors")
             .WithTags("Vendors")
             .MapVendorEndpoints();
