@@ -1,7 +1,9 @@
 ﻿using InvoiceFlow.Intake.Authorization;
 using InvoiceFlow.Intake.Domain;
 using InvoiceFlow.Intake.Files;
+using InvoiceFlow.Intake.Idempotency;
 using InvoiceFlow.Intake.Infrastructure;
+using InvoiceFlow.SharedKernel.Http;
 using InvoiceFlow.SharedKernel.ValueObjects;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -18,11 +20,14 @@ internal static class InvoiceEndpoints
         this RouteGroupBuilder group)
     {
         group.MapPost("/", SubmitInvoice)
+            .AddEndpointFilter<IdempotencyFilter<SubmitInvoiceRequest>>()
             .AddEndpointFilter<ValidationFilter<SubmitInvoiceRequest>>()
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
             .ProducesProblem(StatusCodes.Status409Conflict)
-            .RequireAuthorization(IntakePolicies.SubmitInvoices);
+            .ProducesProblem(StatusCodes.Status429TooManyRequests)
+            .RequireAuthorization(IntakePolicies.SubmitInvoices)
+            .RequireRateLimiting(RateLimitPolicies.Submissions);
 
         group.MapGet("/{id:guid}", GetInvoiceById)
             .WithName("GetInvoiceById")
