@@ -44,9 +44,11 @@ public static class IntakeModule
         RouteGroupBuilder group = endpoints.MapGroup("/api/intake");
 
         group.MapPost("/files", UploadInvoiceFile.HandleAsync)
+            .WithTags("Files")
             .DisableAntiforgery()
             .RequireAuthorization(IntakePolicies.SubmitInvoices)
-            .RequireRateLimiting(RateLimitPolicies.Submissions);
+            .RequireRateLimiting(RateLimitPolicies.Submissions)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests);
         group.MapGroup("/vendors")
             .WithTags("Vendors")
             .MapVendorEndpoints();

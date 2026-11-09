@@ -1,14 +1,22 @@
 ﻿using InvoiceFlow.Intake.Files;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Options;
 
 namespace InvoiceFlow.Intake.Endpoints;
 
 internal static class UploadInvoiceFile
 {
+    private const string FileField = "file";
     private static ReadOnlySpan<byte> PdfSignature => "%PDF-"u8;
 
-    public static async Task<IResult> HandleAsync(
+    private static ValidationProblem FileError(string message) => TypedResults.ValidationProblem(
+        new Dictionary<string, string[]>
+        {
+            [FileField] = [message],
+        });
+
+    public static async Task<Results<Created<UploadFileResponse>, ValidationProblem>> HandleAsync(
         IFormFile file,
         IInvoiceFileStore store,
         IOptions<IntakeOptions> options,
@@ -16,26 +24,17 @@ internal static class UploadInvoiceFile
     {
         long maxBytes = options.Value.MaxUploadSizeBytes;
 
-        if (file is null || file.Length == 0)
+        if (file.Length == 0)
         {
-            return Results.BadRequest(new
-            {
-                error = "File is empty"
-            });
+            return FileError("File is empty.");
         }
         if (file.Length > maxBytes)
         {
-            return Results.BadRequest(new
-            {
-                error = $"File is larger than {maxBytes / (1024 * 1024)} MB"
-            });
+            return FileError($"File is larger than {maxBytes / (1024 * 1024)} MB.");
         }
         if (!string.Equals(file.ContentType, "application/pdf", StringComparison.OrdinalIgnoreCase))
         {
-            return Results.BadRequest(new
-            {
-                error = "File must be a PDF"
-            });
+            return FileError("File must be a PDF.");
         }
 
         byte[] signature = new byte[5];
@@ -57,21 +56,21 @@ internal static class UploadInvoiceFile
             }
         }
 
-
         if (bytesRead != signature.Length || !signature.AsSpan().SequenceEqual(PdfSignature))
         {
-            return Results.BadRequest(new
-            {
-                error = "The uploaded file does not have a valid PDF signature."
-            });
+            return FileError("The uploaded file does not have a valid PDF signature.");
         }
 
         await using Stream content = file.OpenReadStream();
 
         StoredFile storedFile = await store.SaveAsync(content, file.FileName, cancellationToken);
 
-        return Results.Created(
-            $"/api/intake/files/{storedFile.FileId}",
-            storedFile);
+        UploadFileResponse response = new(
+            storedFile.FileId,
+            storedFile.FileName,
+            storedFile.SizeBytes,
+            storedFile.Sha256);
+
+        return TypedResults.Created((string?)null, response);
     }
 }
