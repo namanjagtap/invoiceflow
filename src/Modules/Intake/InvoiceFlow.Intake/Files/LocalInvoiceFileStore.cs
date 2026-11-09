@@ -21,7 +21,9 @@ internal interface IInvoiceFileStore
         Guid fileId,
         CancellationToken cancellationToken);
 }
-internal sealed class LocalInvoiceFileStore(IOptions<IntakeOptions> options) : IInvoiceFileStore
+internal sealed class LocalInvoiceFileStore(
+    IOptions<IntakeOptions> options,
+    TimeProvider timeProvider) : IInvoiceFileStore
 {
     private readonly string _rootPath = options.Value.StoragePath;
 
@@ -34,7 +36,7 @@ internal sealed class LocalInvoiceFileStore(IOptions<IntakeOptions> options) : I
         ArgumentNullException.ThrowIfNull(fileName);
 
         Guid fileId = Guid.NewGuid();
-        DateTime utcNow = DateTime.UtcNow;
+        DateTime utcNow = timeProvider.GetUtcNow().UtcDateTime;
 
         string folder = Path.Combine(
             _rootPath,
