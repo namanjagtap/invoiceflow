@@ -1,5 +1,6 @@
 ﻿using InvoiceFlow.Intake.Files;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Time.Testing;
 using System.Security.Cryptography;
 
 namespace InvoiceFlow.Intake.Tests.Files;
@@ -7,10 +8,14 @@ namespace InvoiceFlow.Intake.Tests.Files;
 public sealed class LocalInvoiceFileStoreTests : IDisposable
 {
     private readonly string _root = Path.Combine(Path.GetTempPath(), "invoiceflow-tests", Guid.NewGuid().ToString());
+    private readonly FakeTimeProvider _time = new(
+        new DateTimeOffset(2026, 3, 15, 10, 0, 0, TimeSpan.Zero));
     private readonly LocalInvoiceFileStore _store;
 
     public LocalInvoiceFileStoreTests() =>
-        _store = new LocalInvoiceFileStore(Options.Create(new IntakeOptions { StoragePath = _root }));
+        _store = new LocalInvoiceFileStore(
+            Options.Create(new IntakeOptions { StoragePath = _root }),
+            _time);
 
     public void Dispose()
     {
@@ -100,5 +105,24 @@ public sealed class LocalInvoiceFileStoreTests : IDisposable
             CancellationToken.None);
 
         Assert.False(exists);
+    }
+
+    [Fact]
+    public async Task SaveAsync_StoresFileUnderYearAndMonthOfCurrentTime()
+    {
+        using var content = new MemoryStream("%PDF-1.4 test invoice"u8.ToArray());
+
+        StoredFile stored = await _store.SaveAsync(
+            content,
+            "invoice.pdf",
+            CancellationToken.None);
+
+        string expectedPath = Path.Combine(
+            _root,
+            "2026",
+            "03",
+            $"{stored.FileId}.pdf");
+
+        Assert.True(File.Exists(expectedPath));
     }
 }
