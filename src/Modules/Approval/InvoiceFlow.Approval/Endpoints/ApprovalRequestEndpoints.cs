@@ -30,6 +30,7 @@ internal static class ApprovalRequestEndpoints
         group.MapPost("/{id:guid}/approve", Approve)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .RequireAuthorization(ApprovalPolicies.Approve);
 
         return group;

@@ -26,6 +26,7 @@ internal static class InvoiceEndpoints
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status429TooManyRequests)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .RequireAuthorization(IntakePolicies.SubmitInvoices)
             .RequireRateLimiting(RateLimitPolicies.Submissions);
 
@@ -37,6 +38,7 @@ internal static class InvoiceEndpoints
         group.MapGet("/", ListInvoices)
             .AddEndpointFilter<ValidationFilter<ListInvoicesRequest>>()
             .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .RequireAuthorization(IntakePolicies.ReadInvoices);
 
         return group;
