@@ -4,6 +4,7 @@
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
+    <File Path="compose.yaml" />
     <File Path="Directory.Build.props" />
   </Folder>
   <Folder Name="/src/" />
