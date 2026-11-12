@@ -47,6 +47,13 @@ internal sealed class Invoice
         ReceivedAtUtc = receivedAtUtc;
     }
 
+    // EF Core uses this constructor when loading an invoice. It then sets every property from its column.
+#pragma warning disable CS8618
+    private Invoice()
+    {
+    }
+#pragma warning restore CS8618
+
     public static Invoice Submit(
         Guid vendorId,
         InvoiceNumber number,
