@@ -4,6 +4,10 @@ namespace InvoiceFlow.Intake.Infrastructure;
 
 internal interface IVendorRepository
 {
-    bool TryAdd(Vendor vendor);
-    Vendor? GetById(Guid id);
+    Task<bool> TryAddAsync(
+        Vendor vendor,
+        CancellationToken cancellationToken);
+    Task<Vendor?> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken);
 }

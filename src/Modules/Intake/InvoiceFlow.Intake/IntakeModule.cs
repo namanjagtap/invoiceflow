@@ -8,6 +8,7 @@ using InvoiceFlow.SharedKernel.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -30,9 +31,21 @@ public static class IntakeModule
             }).ValidateOnStart();
 
         services.AddSingleton<IInvoiceFileStore, LocalInvoiceFileStore>();
-        services.AddSingleton<IVendorRepository, InMemoryVendorRepository>();
-        services.AddSingleton<IInvoiceRepository, InMemoryInvoiceRepository>();
         services.AddSingleton<IIdempotencyStore, InMemoryIdempotencyStore>();
+
+        string connectionString = configuration.GetConnectionString("InvoiceFlow")
+            ?? throw new InvalidOperationException(
+                "Connection string 'InvoiceFlow' is not configured.");
+
+        services.AddDbContext<IntakeDbContext>(options =>
+            options.UseSqlServer(
+                connectionString,
+                sql => sql.MigrationsHistoryTable(
+                    "__EFMigrationsHistory",
+                    IntakeDbContext.Schema)));
+
+        services.AddScoped<IVendorRepository, VendorRepository>();
+        services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddValidatorsFromAssembly(typeof(IntakeModule).Assembly, includeInternalTypes: true);
         services.AddIntakePolicies();
 
