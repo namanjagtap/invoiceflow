@@ -61,7 +61,7 @@ internal static class InvoiceEndpoints
             return TypedResults.Forbid();
         }
 
-        Vendor? vendor = vendorRepository.GetById(request.VendorId);
+        Vendor? vendor = await vendorRepository.GetByIdAsync(request.VendorId, cancellationToken);
 
         if (vendor is null)
         {
@@ -96,7 +96,7 @@ internal static class InvoiceEndpoints
             request.FileId,
             timeProvider.GetUtcNow().UtcDateTime);
 
-        if (!invoiceRepository.TryAdd(invoice))
+        if (!await invoiceRepository.TryAddAsync(invoice, cancellationToken))
         {
             logger.LogWarning(
                 "Duplicate invoice {InvoiceNumber} rejected for vendor {VendorId}",
@@ -124,12 +124,13 @@ internal static class InvoiceEndpoints
             new { id = invoice.Id });
     }
 
-    private static Results<Ok<InvoiceResponse>, ProblemHttpResult> GetInvoiceById(
+    private static async Task<Results<Ok<InvoiceResponse>, ProblemHttpResult>> GetInvoiceById(
         Guid id,
         IInvoiceRepository invoiceRepository,
-        ClaimsPrincipal user)
+        ClaimsPrincipal user,
+        CancellationToken cancellationToken)
     {
-        Invoice? invoice = invoiceRepository.GetById(id);
+        Invoice? invoice = await invoiceRepository.GetByIdAsync(id, cancellationToken);
 
         if (invoice is null || !VendorAccess.CanActFor(user, invoice.VendorId))
         {
@@ -141,10 +142,11 @@ internal static class InvoiceEndpoints
         return TypedResults.Ok(ToResponse(invoice));
     }
 
-    private static Results<Ok<PagedResponse<InvoiceResponse>>, ForbidHttpResult> ListInvoices(
+    private static async Task<Results<Ok<PagedResponse<InvoiceResponse>>, ForbidHttpResult>> ListInvoices(
         [AsParameters] ListInvoicesRequest request,
         IInvoiceRepository invoiceRepository,
-        ClaimsPrincipal user)
+        ClaimsPrincipal user,
+        CancellationToken cancellationToken)
     {
         if (!VendorAccess.TryResolveVendorScope(
             user,
@@ -157,13 +159,14 @@ internal static class InvoiceEndpoints
         int page = request.Page ?? 1;
         int pageSize = request.PageSize ?? ListInvoicesRequest.DefaultPageSize;
 
-        InvoicePage invoicePage = invoiceRepository.Search(
+        InvoicePage invoicePage = await invoiceRepository.SearchAsync(
             new InvoiceQuery(
                 vendorId,
                 request.FromDate,
                 request.ToDate,
                 page,
-                pageSize));
+                pageSize),
+            cancellationToken);
 
         PagedResponse<InvoiceResponse> response = new(
             invoicePage.Items.Select(ToResponse).ToArray(),

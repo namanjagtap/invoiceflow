@@ -29,11 +29,12 @@ internal static class VendorEndpoints
         return group;
     }
 
-    private static Results<CreatedAtRoute<VendorResponse>, ProblemHttpResult> RegisterVendor(
+    private static async Task<Results<CreatedAtRoute<VendorResponse>, ProblemHttpResult>> RegisterVendor(
         RegisterVendorRequest request,
         IVendorRepository vendorRepository,
         TimeProvider timeProvider,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        CancellationToken cancellationToken)
     {
         ILogger logger = loggerFactory.CreateLogger("InvoiceFlow.Intake.Vendors");
 
@@ -45,7 +46,7 @@ internal static class VendorEndpoints
             request.PaymentTermsDays!.Value,
             timeProvider.GetUtcNow().UtcDateTime);
 
-        if (!vendorRepository.TryAdd(vendor))
+        if (!await vendorRepository.TryAddAsync(vendor, cancellationToken))
         {
             logger.LogWarning(
                 "Duplicate vendor registration rejected for GSTIN {Gstin}",
@@ -70,11 +71,12 @@ internal static class VendorEndpoints
             new { id = vendor.Id });
     }
 
-    private static Results<Ok<VendorResponse>, ProblemHttpResult> GetVendorById(
+    private static async Task<Results<Ok<VendorResponse>, ProblemHttpResult>> GetVendorById(
         Guid id,
-        IVendorRepository vendorRepository)
+        IVendorRepository vendorRepository,
+        CancellationToken cancellationToken)
     {
-        Vendor? vendor = vendorRepository.GetById(id);
+        Vendor? vendor = await vendorRepository.GetByIdAsync(id, cancellationToken);
 
         if (vendor is null)
         {

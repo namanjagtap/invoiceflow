@@ -4,7 +4,13 @@ namespace InvoiceFlow.Intake.Infrastructure;
 
 internal interface IInvoiceRepository
 {
-    bool TryAdd(Invoice invoice);
-    Invoice? GetById(Guid id);
-    InvoicePage Search(InvoiceQuery query);
+    Task<bool> TryAddAsync(
+        Invoice invoice,
+        CancellationToken cancellationToken);
+    Task<Invoice?> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken);
+    Task<InvoicePage> SearchAsync(
+        InvoiceQuery query,
+        CancellationToken cancellationToken);
 }
