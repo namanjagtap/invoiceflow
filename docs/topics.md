@@ -963,14 +963,14 @@ Rules like `Cascade(CascadeMode.Stop)` stop at the first failure for a field, so
 - **Private constructor + static factory** (`Invoice.Submit(...)`, `Vendor.Register(...)`, `ApprovalRequest.Create(...)`). The factory checks every rule before creating the object.
 - **`private set`:** nothing outside can change state directly. Changes go through methods like `ApprovalRequest.Approve(approverId, utcNow)`, which enforces "same approver can't approve twice" and "can't approve after fully approved".
 - **Collections exposed read-only:** `Decisions => _decisions.AsReadOnly()`.
-- **`Guid.CreateVersion7()`:** a GUID whose first part is a timestamp, so new IDs sort by creation time. That matters for database index performance in Week 3.
+- **`Guid.CreateVersion7()`:** a GUID whose first part is a timestamp, so IDs are roughly in creation order in .NET and PostgreSQL. **SQL Server is different:** its `uniqueidentifier` ordering compares the last 6 bytes first, so UUIDv7 does not give sequential inserts there. Our test with six IDs created in order returned `4, 3, 2, 6, 5, 1` from `ORDER BY`. Week 3 Day 3 measures fragmentation with 500k rows so we can choose a clustered key based on actual results.
 - **`FinancialYear`:** the Indian financial year runs April to March, so 15 March 2026 is in `2025-26` and 1 April 2026 is in `2026-27`. It's part of the duplicate-invoice rule.
 
 **Why InvoiceFlow needs it:** money and approvals have rules that must hold no matter which endpoint, background job or future event handler touches the object.
 
 **Where:** [Invoice.cs](../src/Modules/Intake/InvoiceFlow.Intake/Domain/Invoice.cs), [Vendor.cs](../src/Modules/Intake/InvoiceFlow.Intake/Domain/Vendor.cs), [FinancialYear.cs](../src/Modules/Intake/InvoiceFlow.Intake/Domain/FinancialYear.cs), [ApprovalRequest.cs](../src/Modules/Approval/InvoiceFlow.Approval/Domain/ApprovalRequest.cs)
 
-**Week 3 note:** EF Core needs a way to create these objects when loading from the database. We'll add private parameterless constructors and map the value objects. That's planned.
+**Week 3 note:** done in Week 3 Day 1. `Invoice` got a private parameterless constructor, because EF Core cannot pass the `Money` complex properties through a constructor. `Vendor` did not need one: EF uses its existing private constructor. The value objects are mapped with value converters (`Gstin`, `InvoiceNumber`, `FinancialYear`) and complex properties (`Money`).
 
 **Common mistake:** `public Status { get; set; }` and setting `invoice.Status = Approved` from an endpoint, skipping every rule.
 
@@ -984,7 +984,7 @@ Rules like `Cascade(CascadeMode.Stop)` stop at the first failure for a field, so
 
 1. `2025-26`, then `2026-27`.
 2. With a `List`, any caller could `Add` a decision and skip `Approve`'s checks (duplicate approver, already approved). Read-only access forces changes through the method that enforces the rules.
-3. Version 7 GUIDs start with a timestamp, so they are roughly in order. Database indexes then insert at the end instead of at random pages, which is faster and fragments less. Random v4 GUIDs scatter inserts.
+3. UUIDv7 puts a timestamp in the first part, so IDs are roughly in creation order in .NET and PostgreSQL. But SQL Server sorts `uniqueidentifier` by its last 6 bytes first, so UUIDv7 is not sequential there. Our test confirmed this: six IDs created in order came back as `4, 3, 2, 6, 5, 1`. Week 3 Day 3 measures index fragmentation with 500k rows before we choose a clustered key.
 
 </details>
 
