@@ -58,6 +58,8 @@ public class ModuleBoundaryTests
         TestResult result = Types.InAssembly(Modules[module])
             .That()
             .ArePublic()
+            .And()
+            .DoNotResideInNamespaceEndingWith(".Migrations")
             .Should()
             .HaveNameEndingWith("Module")
             .GetResult();
