@@ -43,6 +43,61 @@ flowchart LR
 - **AI:** Microsoft Foundry, Azure AI Search
 - **Cloud:** Azure Container Apps, GitHub Actions
 
+## Run locally
+
+### Prerequisites
+- .NET 10 SDK
+- Docker Desktop
+- EF Core tools: `dotnet tool install --global dotnet-ef`
+- SSMS (optional)
+
+### 1. Start SQL Server
+Create a `.env` file in the repository root:
+
+```text
+SQL_SA_PASSWORD=<your-strong-password>
+```
+
+`.env` is ignored by git, so the password never gets committed.
+
+Start SQL Server:
+
+```powershell
+docker compose up -d
+```
+
+SQL Server will be available at `localhost,1433`.
+
+### 2. Configure the connection string
+
+```powershell
+dotnet user-secrets set "ConnectionStrings:InvoiceFlow" "Server=localhost,1433;Database=InvoiceFlow;User Id=sa;Password=<your-strong-password>;TrustServerCertificate=True" --project src/Host/InvoiceFlow.Api
+```
+
+### 3. Apply database migrations
+
+```powershell
+dotnet ef database update --project src/Modules/Intake/InvoiceFlow.Intake --startup-project src/Host/InvoiceFlow.Api --context IntakeDbContext
+```
+
+### 4. Run the API
+
+```powershell
+dotnet run --project src/Host/InvoiceFlow.Api
+```
+
+Open Swagger UI at http://localhost:5146/swagger
+(or run with `--launch-profile https` and use https://localhost:7187/swagger)
+
+### 5. Run the tests
+
+```powershell
+dotnet build
+dotnet test
+```
+
+Docker Desktop must be running because the Intake repository integration tests use Testcontainers with SQL Server.
+
 ## Status
 
 Part 1 of 2: modular monolith, in progress. Part 2 splits it into microservices that communicate through Kafka.
